@@ -1,55 +1,55 @@
-# Moy Agregator
+# Telegram Aggregator
 
-Telegram-бот-агрегатор: собирает новые посты из каналов клиентов и автоматически
-дублирует их в ленту-агрегатор. Размещение каналов — по подписке, оплата в
-криптовалюте (USDT / TON) через **Crypto Pay API**.
+A Telegram bot aggregator that collects new posts from clients' channels and
+automatically mirrors them into an aggregator feed. Channel placement is
+subscription-based, paid in crypto (USDT / TON) via the **Crypto Pay API**.
 
-Бот объединяет два слоя:
+The bot combines two layers:
 
-- **Клиентский** — приветствие, баланс, тарифы, пополнение, заявки на размещение.
-- **Админский** — управление каналами, стоп-словами, режимом пересылки, аппрув заявок.
-
----
-
-## Возможности
-
-### Для клиентов
-- 👋 Приветственный экран с балансом аккаунта
-- 📡 **Мои каналы** — список размещённых каналов и их срок действия
-- 👤 **Личный кабинет** — баланс, история пополнений, пополнение счёта
-- 🎁 **Пригласить друзей** — реферальная программа (**15%** от пополнений приглашённых)
-- ℹ️ **О сервисе**
-- 💳 Оплата в **USDT (TRC20 / BEP20)** и **TON** через Crypto Pay
-
-### Для администратора
-- 🛠 **Админская панель** — все команды управления
-- Аппрув / отклонение заявок на размещение каналов
-- Управление целевым каналом и режимом пересылки
-- Стоп-слова (глобальная фильтрация контента)
-
-### Технические
-- Автоматическая подписка юзербота на одобренные каналы (публичные и приватные)
-- Пересылка одиночных постов и альбомов
-- Автоматическая проверка сроков и удаление истёкших каналов
-- Уведомление админа об окончании подписки канала
-- Автозачисление баланса после оплаты (фоновый watcher)
+- **Client side** — welcome screen, balance, plans, top-up, placement requests.
+- **Admin side** — channel management, stop words, forwarding mode, request approval.
 
 ---
 
-## Тарифы размещения
+## Features
 
-| Период | Стоимость |
+### For clients
+- 👋 Welcome screen with account balance
+- 📡 **My channels** — list of placed channels and their expiry dates
+- 👤 **Account** — balance, top-up history, balance top-up
+- 🎁 **Invite friends** — referral program (**15%** of invitees' top-ups)
+- ℹ️ **About**
+- 💳 Payment in **USDT (TRC20 / BEP20)** and **TON** via Crypto Pay
+
+### For administrators
+- 🛠 **Admin panel** — all management commands
+- Approve / reject channel placement requests
+- Manage the target channel and forwarding mode
+- Stop words (global content filtering)
+
+### Technical
+- Automatic subscription of the userbot to approved channels (public and private)
+- Forwarding of single posts and albums
+- Automatic expiry checks and removal of expired channels
+- Admin notification when a channel subscription is about to expire
+- Automatic balance crediting after payment (background watcher)
+
+---
+
+## Placement plans
+
+| Period | Price |
 |---|---|
-| 1 месяц | 10$ |
-| 2 месяца | 15$ |
-| 3 месяца | 20$ |
+| 1 month | $10 |
+| 2 months | $15 |
+| 3 months | $20 |
 
-Оплата происходит **после подтверждения заявки администратором**: средства
-списываются с внутреннего баланса аккаунта.
+Payment happens **after the request is approved by the administrator**: the
+funds are deducted from the account's internal balance.
 
 ---
 
-## Установка
+## Installation
 
 ```bash
 python3 -m venv .venv
@@ -57,65 +57,66 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Настройка окружения
+### Environment setup
 
 ```bash
 cp .env.example .env
 ```
 
-Заполните `.env`:
+Fill in `.env`:
 
 ```env
-BOT_TOKEN=          # токен бота от @BotFather
-API_HASH=           # с https://my.telegram.org
-API_ID=             # с https://my.telegram.org
-ADMIN_ID=           # ваш user id (узнать в @userinfobot)
-BOT_USERNAME=@      # username бота (для реферальных ссылок)
+BOT_TOKEN=          # bot token from @BotFather
+API_HASH=           # from https://my.telegram.org
+API_ID=             # from https://my.telegram.org
+ADMIN_ID=           # your user id (get it from @userinfobot)
+BOT_USERNAME=@      # bot username (for referral links)
 
-CRYPTO_PAY_TOKEN=   # токен Crypto Pay API
-REFERRAL_PERCENT=15 # % реферального вознаграждения
+CRYPTO_PAY_TOKEN=   # Crypto Pay API token
+REFERRAL_PERCENT=15 # referral reward percentage
 ```
 
-#### Как получить токен Crypto Pay
+#### How to get a Crypto Pay token
 
-1. Откройте **@CryptoBot** в Telegram.
-2. Отправьте команду `/pay` → откроется приложение **Crypto Pay**.
-3. Нажмите **Create App**, задайте имя.
-4. Скопируйте **API Token** и вставьте в `CRYPTO_PAY_TOKEN`.
+1. Open **@CryptoBot** in Telegram.
+2. Send the `/pay` command → the **Crypto Pay** app opens.
+3. Click **Create App** and give it a name.
+4. Copy the **API Token** and put it into `CRYPTO_PAY_TOKEN`.
 
-> ⚠️ Токен даёт доступ к приёму платежей — не публикуйте его и не коммитьте в git.
+> ⚠️ The token grants access to payment collection — never publish it or commit
+> it to git.
 
-### Создание сессии юзербота (Telethon)
+### Creating the userbot session (Telethon)
 
-Выполняется **один раз**. Нужна, чтобы юзербот подписывался на каналы и
-пересылал посты.
+Performed **once**. Required for the userbot to subscribe to channels and
+forward posts.
 
 ```bash
 python services/auth.py
 ```
 
-Введите номер телефона, код из Telegram и облачный пароль (если включена
-двухэтапная проверка). При успехе появится:
+Enter your phone number, the code from Telegram, and the cloud password (if
+two-step verification is enabled). On success you will see:
 
 ```
-Успешная авторизация, Аккаунт Имя (@username)
+Successful authorization, Account Name (@username)
 ```
 
-> 💡 Для юзербота лучше использовать отдельный аккаунт, а не личный: он будет
-> вступать в каналы клиентов.
+> 💡 It is better to use a separate account for the userbot rather than your
+> personal one: it will join clients' channels.
 
 ---
 
-## Запуск
+## Running
 
 ```bash
 source .venv/bin/activate
 python main.py
 ```
 
-Остановка — `Ctrl + C` (сервисы отключаются корректно).
+Stop with `Ctrl + C` (services shut down gracefully).
 
-### Запуск через PM2 (для постоянной работы)
+### Running via PM2 (for continuous operation)
 
 ```bash
 pm2 start .venv/bin/python --name "Aggregator" -- main.py
@@ -125,79 +126,79 @@ pm2 startup
 
 ---
 
-## Первоначальная настройка бота
+## First-time bot setup
 
-После запуска зайдите в бота с аккаунта администратора:
+After starting, open the bot from the administrator account:
 
-| Команда | Действие |
+| Command | Action |
 |---|---|
-| `/admin` | Админская панель со списком команд |
-| `/settarget @канал` | Установить целевой (лента) канал для пересылки |
-| `/replymode on` | Включить пересылку |
-| `/showsettings` | Статус агрегатора и список каналов |
+| `/admin` | Admin panel with the command list |
+| `/settarget @channel` | Set the target (feed) channel for forwarding |
+| `/replymode on` | Enable forwarding |
+| `/showsettings` | Aggregator status and channel list |
 
 ---
 
-## Команды
+## Commands
 
-### Администратора
-| Команда | Описание |
+### Administrator
+| Command | Description |
 |---|---|
-| `/admin` | Показать админскую панель |
-| `/showsettings` | Статус агрегатора, список каналов, сроки |
-| `/replymode on\|off` | Включить / выключить пересылку |
-| `/addsource (канал) (дни)` | Добавить канал (без дней — бессрочно) |
-| `/removesource (канал)` | Удалить канал |
-| `/settarget (канал)` | Установить целевой канал |
-| `/ignore` | Показать список стоп-слов |
-| `/addignore (слово) (слово) …` | Добавить стоп-слова |
-| `/removeignore (слово) (слово) …` | Удалить стоп-слова |
+| `/admin` | Show the admin panel |
+| `/showsettings` | Aggregator status, channel list, expiry dates |
+| `/replymode on\|off` | Enable / disable forwarding |
+| `/addsource (channel) (days)` | Add a channel (omit days for unlimited) |
+| `/removesource (channel)` | Remove a channel |
+| `/settarget (channel)` | Set the target channel |
+| `/ignore` | Show the stop-word list |
+| `/addignore (word) (word) …` | Add stop words |
+| `/removeignore (word) (word) …` | Remove stop words |
 
-### Клиентов
-Управление через инлайн-кнопки: **Мои каналы**, **Личный кабинет**,
-**Пригласить друзей**, **О сервисе**.
-
----
-
-## Поток размещения канала
-
-1. Клиент открывает бота → **Мои каналы** → **Подключить канал**.
-2. Выбирает тариф (проверяется баланс).
-3. Отправляет ссылку на канал (`@username` или invite-ссылку для приватного).
-4. Заявка уходит администратору с кнопками **Аппрув / Отклонить**.
-5. При аппруве: списывается стоимость, канал добавляется в БД, юзербот
-   автоматически подписывается, клиент получает уведомление.
-6. Посты канала начинают дублироваться в ленту.
+### Clients
+Managed via inline buttons: **My channels**, **Account**, **Invite friends**,
+**About**.
 
 ---
 
-## Структура проекта
+## Channel placement flow
+
+1. The client opens the bot → **My channels** → **Connect channel**.
+2. Selects a plan (balance is checked).
+3. Sends a channel link (`@username` or an invite link for a private channel).
+4. The request is sent to the administrator with **Approve / Reject** buttons.
+5. On approval: the price is deducted, the channel is added to the database,
+   the userbot subscribes automatically, and the client receives a notification.
+6. The channel's posts start being mirrored to the feed.
+
+---
+
+## Project structure
 
 ```
 .
-├── main.py               # точка входа: бот, юзербот, watcher платежей
-├── config.py             # конфигурация (pydantic-settings)
-├── content.py            # тексты и тарифы
-├── keyboards.py          # инлайн-клавиатуры
+├── main.py               # entry point: bot, userbot, payment watcher
+├── config.py             # configuration (pydantic-settings)
+├── content.py            # texts and plans
+├── keyboards.py          # inline keyboards
 ├── handlers/
-│   ├── user.py           # клиентский роутер
-│   ├── admin.py          # админские команды
-│   └── forwarder.py      # пересылка постов в ленту
+│   ├── user.py           # client router
+│   ├── admin.py          # admin commands
+│   └── forwarder.py      # forwarding posts to the feed
 ├── services/
-│   ├── parser.py         # юзербот (Telethon): подписка и пересылка
-│   ├── crypto_pay.py     # клиент Crypto Pay API
-│   └── auth.py           # создание сессии Telethon
+│   ├── parser.py         # userbot (Telethon): subscription and forwarding
+│   ├── crypto_pay.py     # Crypto Pay API client
+│   └── auth.py           # Telethon session creation
 ├── database/
-│   ├── bd.py             # JSON-БД: users, sources, pending, invoices
-│   └── logging.py        # логирование (loguru)
+│   ├── bd.py             # JSON DB: users, sources, pending, invoices
+│   └── logging.py        # logging (loguru)
 └── .env.example
 ```
 
 ---
 
-## База данных
+## Database
 
-Хранится в `database/data.json`:
+Stored in `database/data.json`:
 
 ```json
 {
@@ -231,10 +232,10 @@ pm2 startup
 
 ---
 
-## Зависимости
+## Dependencies
 
 - [aiogram](https://docs.aiogram.dev/) — Telegram Bot API
-- [Telethon](https://docs.telethon.dev/) — MTProto-клиент (юзербот)
-- [Crypto Pay API](https://help.crypt.bot/crypto-pay-api) — приём платежей
-- [loguru](https://github.com/Delgan/loguru) — логирование
-- [pydantic-settings](https://docs.pydantic.dev/) — конфигурация
+- [Telethon](https://docs.telethon.dev/) — MTProto client (userbot)
+- [Crypto Pay API](https://help.crypt.bot/crypto-pay-api) — payment collection
+- [loguru](https://github.com/Delgan/loguru) — logging
+- [pydantic-settings](https://docs.pydantic.dev/) — configuration

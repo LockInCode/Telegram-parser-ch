@@ -9,16 +9,16 @@ router = Router()
 
 def admin_help_text() -> str:
     return (
-        "🛠 <b>Админская панель</b>\n\n"
-        "Список команд для администратора:\n"
-        "/showsettings - показать количество каналов в агрегаторе\n"
-        "/replymode - переключить статус пересылки on/off\n"
-        "/addsource (ссылка, юзернейм или id канала) (количество дней) - добавить канал\n"
-        "/removesource (ссылка, юзернейм или id канала) - удалить канал\n"
-        "/settarget (ссылка/юзернейм/id) - установить целевой канал\n"
-        "/ignore - открывает список игнор слов\n"
-        "/addignore (слово) (слово) ... - добавить стоп слова\n"
-        "/removeignore (слово) (слово) ... - удалить стоп слова"
+        "🛠 <b>Admin panel</b>\n\n"
+        "Administrator command list:\n"
+        "/showsettings - show the number of channels in the aggregator\n"
+        "/replymode - toggle forwarding status on/off\n"
+        "/addsource (link, username or channel id) (days) - add a channel\n"
+        "/removesource (link, username or channel id) - remove a channel\n"
+        "/settarget (link/username/id) - set the target channel\n"
+        "/ignore - show the stop-word list\n"
+        "/addignore (word) (word) ... - add stop words\n"
+        "/removeignore (word) (word) ... - remove stop words"
     )
 
 
@@ -31,11 +31,11 @@ async def cmd_admin(message: Message):
 async def show_settings(message: Message):
     if str(message.from_user.id) == settings.admin_id:
         sources = db.get_sources()
-        target = db.get_target_channel() or "Не установлен"
-        reply_mode = "Включён" if db.get_reply_mode() else "Выключен"
+        target = db.get_target_channel() or "Not set"
+        reply_mode = "Enabled" if db.get_reply_mode() else "Disabled"
 
         if not sources:
-            sources_text = "<i>Каналы не добавлены</i>"
+            sources_text = "<i>No channels added</i>"
         else:
             sources_list = []
             now = datetime.now()
@@ -43,19 +43,19 @@ async def show_settings(message: Message):
             for src in sources:
                 channel = src.get("channel")
                 title = src.get("title")
-                date_str = src.get("end_date", "Бессрочно")
+                date_str = src.get("end_date", "Unlimited")
                 display_name = f"<b>{title}</b> (<code>{channel}</code>)" if title else f"<b>{channel}</b>"
 
-                if date_str and date_str != "Бессрочно":
+                if date_str and date_str != "Unlimited":
                     try:
                         expire_dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M")
                         days_left = (expire_dt - now).days
-                        left_str = f"({days_left} дн.)" if days_left > 0 else "(менее 1 дн.)"
-                        date_display = f"до {date_str} {left_str}"
+                        left_str = f"({days_left} d.)" if days_left > 0 else "(less than 1 d.)"
+                        date_display = f"until {date_str} {left_str}"
                     except ValueError:
-                        date_display = f"до {date_str}"
+                        date_display = f"until {date_str}"
                 else:
-                    date_display = "Бессрочно"
+                    date_display = "Unlimited"
                 
                 sources_list.append(
                     f'<tg-emoji emoji-id="5474359500095890971">🔹</tg-emoji> {display_name} -- {date_display}'
@@ -63,10 +63,10 @@ async def show_settings(message: Message):
             sources_text = "\n".join(sources_list)
 
         await message.answer(
-            f"<b>Настройки агрегатора</b>\n\n"
-            f"<b>Целевой канал:</b> {target}\n\n"
-            f"<b>Режим пересылки:</b> {reply_mode}\n\n"
-            f"<b>Количество каналов в агрегаторе: {len(sources)}</b>\n\n"
+            f"<b>Aggregator settings</b>\n\n"
+            f"<b>Target channel:</b> {target}\n\n"
+            f"<b>Forwarding mode:</b> {reply_mode}\n\n"
+            f"<b>Channels in the aggregator: {len(sources)}</b>\n\n"
             f"{sources_text}"
         )
 
@@ -75,7 +75,7 @@ async def add_source(message: Message):
     if str(message.from_user.id) == settings.admin_id:
         args = message.text.split(maxsplit=2)
         if len(args) < 2:
-            await message.answer("Пожалуйста, укажите ссылку/юзернейм на канал.")
+            await message.answer("Please provide a channel link/username.")
             return
 
         channel = args[1]
@@ -85,27 +85,27 @@ async def add_source(message: Message):
             try:
                 days = int(args[2])
             except ValueError:
-                await message.answer("Количество дней должно быть числом.")
+                await message.answer("The number of days must be a number.")
                 return
 
         db.add_source(channel, days)
 
         if days:
-            await message.answer(f"Канал {channel} добавлен в агрегатор на {days} дней.")
+            await message.answer(f"Channel {channel} added to the aggregator for {days} days.")
         else:
-            await message.answer(f"Канал {channel} добавлен в агрегатор <b>бессрочно</b>.")
+            await message.answer(f"Channel {channel} added to the aggregator <b>indefinitely</b>.")
 
 @router.message(Command("removesource"))
 async def remove_source(message: Message):
     if str(message.from_user.id) == settings.admin_id:
         args = message.text.split(maxsplit=1)
         if len(args) < 2:
-            await message.answer("Пожалуйста, укажите ссылку на канал.")
+            await message.answer("Please provide a channel link.")
             return
 
         channel = args[1]
         db.remove_source(channel)
-        await message.answer(f"Канал {channel} удален из агрегатора.")
+        await message.answer(f"Channel {channel} removed from the aggregator.")
 
 @router.message(Command("ignore"))
 async def ignore_words(message: Message):
@@ -114,11 +114,11 @@ async def ignore_words(message: Message):
 
     ignore_words = db.get_ignore_words()
     if not ignore_words:
-        await message.answer("Список игнор слов пуст.")
+        await message.answer("The stop-word list is empty.")
         return
 
     ignore_list = "\n".join(f"{i}. <code>{w}</code>" for i, w in enumerate(ignore_words, 1))
-    await message.answer(f"<b>Список игнор слов:</b>\n\n{ignore_list}")
+    await message.answer(f"<b>Stop-word list:</b>\n\n{ignore_list}")
 
 @router.message(Command("addignore"))
 async def add_ignore_words(message: Message):
@@ -127,7 +127,7 @@ async def add_ignore_words(message: Message):
 
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
-        await message.answer("Пожалуйста, укажите слово или несколько слов через пробел.")
+        await message.answer("Please provide one or more words separated by spaces.")
         return
 
     words = args[1].split()
@@ -140,9 +140,9 @@ async def add_ignore_words(message: Message):
 
     if added:
         added_str = ", ".join(f"<code>{w}</code>" for w in added)
-        await message.answer(f"<b>Добавлены стоп слова:</b>\n{added_str}")
+        await message.answer(f"<b>Added stop words:</b>\n{added_str}")
     else:
-        await message.answer("Все указанные слова уже есть в списке.")
+        await message.answer("All specified words are already in the list.")
 
 @router.message(Command("removeignore"))
 async def remove_ignore_words(message: Message):
@@ -151,7 +151,7 @@ async def remove_ignore_words(message: Message):
 
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
-        await message.answer("Пожалуйста, укажите слово или несколько слов через пробел.")
+        await message.answer("Please provide one or more words separated by spaces.")
         return
 
     words = args[1].split()
@@ -163,16 +163,16 @@ async def remove_ignore_words(message: Message):
 
     if removed:
         removed_str = ", ".join(f"<code>{w}</code>" for w in removed)
-        await message.answer(f"<b>Удалены стоп слова:</b>\n{removed_str}")
+        await message.answer(f"<b>Removed stop words:</b>\n{removed_str}")
     else:
-        await message.answer("Указанных слов нет в списке.")
+        await message.answer("The specified words are not in the list.")
 
 @router.message(Command("settarget"))
 async def set_target_channel(message: Message):
     if str(message.from_user.id) == settings.admin_id:
         args = message.text.split(maxsplit=1)
         if len(args) < 2:
-            await message.answer("Пожалуйста, укажите ссылку на канал.")
+            await message.answer("Please provide a channel link.")
             return
         
         raw_channel = args[1].strip()
@@ -183,7 +183,7 @@ async def set_target_channel(message: Message):
             channel = raw_channel
 
         db.set_target_channel(channel)
-        await message.answer(f"Канал {channel} установлен как целевой канал для пересылки.")
+        await message.answer(f"Channel {channel} set as the target channel for forwarding.")
 
 @router.message(Command("replymode"))
 async def reply_mode(message: Message):
@@ -192,18 +192,18 @@ async def reply_mode(message: Message):
     
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
-        current_mode = "Включён" if db.get_reply_mode() else "Выключен"
+        current_mode = "enabled" if db.get_reply_mode() else "disabled"
         await message.answer(
-            f"Текущий режим пересылки {current_mode}\n\n"
+            f"Current forwarding mode: {current_mode}\n\n"
         )
         return
     
     mode_str = args[1].lower().strip()
     if mode_str == "on":
         db.set_reply_mode(True)
-        await message.answer("Режим пересылки: ВКЛЮЧЁН")
+        await message.answer("Forwarding mode: ENABLED")
     elif mode_str == "off":
         db.set_reply_mode(False)
-        await message.answer("Режим пересылки: ВЫКЛЮЧЕН")
+        await message.answer("Forwarding mode: DISABLED")
     else:
-        await message.answer("Используйте только <code>on</code> или <code>off</code>")
+        await message.answer("Use only <code>on</code> or <code>off</code>")

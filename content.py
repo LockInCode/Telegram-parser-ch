@@ -1,42 +1,41 @@
-# Тарифы размещения: ключ -> (месяцы, цена, подпись)
+# Placement plans: key -> (months, price, title, label)
 TARIFFS = {
-    "m1": {"months": 1, "price": 10.0, "title": "1 месяц", "label": "1 месяц — 10$"},
-    "m2": {"months": 2, "price": 15.0, "title": "2 месяца", "label": "2 месяца — 15$"},
-    "m3": {"months": 3, "price": 20.0, "title": "3 месяца", "label": "3 месяца — 20$"},
+    "m1": {"months": 1, "price": 10.0, "title": "1 month", "label": "1 month — $10"},
+    "m2": {"months": 2, "price": 15.0, "title": "2 months", "label": "2 months — $15"},
+    "m3": {"months": 3, "price": 20.0, "title": "3 months", "label": "3 months — $20"},
 }
 
 FEED_LINK = "https://t.me/MOYAGREGATOR"
 
 WELCOME_TEXT = (
-    "👋 <b>Рады видеть тебя в Moy Agregator!</b>\n\n"
-    "Здесь можно оформить размещение своего канала в нашей ленте-агрегаторе — "
-    "все новые посты будут автоматически появляться у нас сразу после публикации.\n\n"
-    f"📢 Наша лента: {FEED_LINK}\n\n"
-    "<b>Стоимость размещения:</b>\n"
-    "• 1 месяц — 10$\n"
-    "• 2 месяца — 15$\n"
-    "• 3 месяца — 20$\n"
+    "👋 <b>Welcome to Telegram Aggregator!</b>\n\n"
+    "Here you can place your channel in our aggregator feed — "
+    "all new posts will appear with us automatically right after publication.\n\n"
+    f"📢 Our feed: {FEED_LINK}\n\n"
+    "<b>Placement pricing:</b>\n"
+    "• 1 month — $10\n"
+    "• 2 months — $15\n"
+    "• 3 months — $20\n"
     "{balance_line}\n\n"
-    "🟢 <b>Как подключить канал?</b>\n"
-    "Выбери тариф, укажи ссылку на свой канал — и новые посты начнут "
-    "автоматически дублироваться в нашей ленте. Передавать права администратора не требуется.\n\n"
-    "Выбирай нужный раздел 👇"
+    "🟢 <b>How to connect a channel?</b>\n"
+    "Choose a plan, provide a link to your channel — and new posts will start "
+    "being mirrored to our feed automatically. No admin rights required.\n\n"
+    "Choose the section you need 👇"
 )
 
 ABOUT_TEXT = (
-    "ℹ️ <b>О сервисе</b>\n\n"
-    "Moy Agregator — лента-агрегатор Telegram-каналов. Разместите свой канал, "
-    "и все новые публикации будут автоматически появляться в нашей ленте.\n\n"
-    "Для размещения не нужно передавать права администратора — достаточно указать "
-    "ссылку на канал.\n\n"
-    "<i>(Раздел в разработке — текст-заглушка.)</i>"
+    "ℹ️ <b>About</b>\n\n"
+    "Telegram Aggregator is a feed-aggregator of Telegram channels. Place your channel, "
+    "and all new publications will appear in our feed automatically.\n\n"
+    "No admin rights are required for placement — just provide a link to your channel.\n\n"
+    "<i>(Section under development — placeholder text.)</i>"
 )
 
-TARGET_CHANNEL_NOTE = f"Лента: {FEED_LINK}"
+TARGET_CHANNEL_NOTE = f"Feed: {FEED_LINK}"
 
 
 def balance_line(balance: float) -> str:
-    return f"💵 <b>Баланс аккаунта: {balance:.2f} USDT</b>"
+    return f"💵 <b>Account balance: {balance:.2f} USDT</b>"
 
 
 def welcome(balance: float) -> str:

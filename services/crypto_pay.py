@@ -36,7 +36,7 @@ class CryptoPay:
         }
 
     def _ssl_context(self):
-        """На macOS у python.org-сборки нет системных CA — берём bundle из certifi."""
+        """On macOS, python.org builds lack system CAs — use the certifi bundle."""
         if certifi is None:
             return None
         try:
@@ -46,7 +46,7 @@ class CryptoPay:
 
     async def _request(self, method: str, payload: dict = None) -> dict:
         if not self.enabled:
-            raise CryptoPayError("Crypto Pay token не задан (CRYPTO_PAY_TOKEN пуст)")
+            raise CryptoPayError("Crypto Pay token is not set (CRYPTO_PAY_TOKEN is empty)")
 
         url = f"{CRYPTO_PAY_API}/{method}"
         timeout = aiohttp.ClientTimeout(total=20)
@@ -57,7 +57,7 @@ class CryptoPay:
                     data = await resp.json()
                 except Exception:
                     text = await resp.text()
-                    raise CryptoPayError(f"Некорректный ответ API ({resp.status}): {text[:200]}")
+                    raise CryptoPayError(f"Invalid API response ({resp.status}): {text[:200]}")
 
         if not data.get("ok"):
             err = data.get("error", {})
@@ -73,12 +73,12 @@ class CryptoPay:
         """
         asset = asset.upper()
         if asset not in SUPPORTED_ASSETS:
-            raise CryptoPayError(f"Ассет {asset} не поддерживается")
+            raise CryptoPayError(f"Asset {asset} is not supported")
 
         body = {
             "asset": asset,
             "amount": str(amount),
-            "description": description or "Пополнение баланса Moy Agregator",
+            "description": description or "Telegram Aggregator balance top-up",
             "payload": payload,
         }
         result = await self._request("createInvoice", body)
