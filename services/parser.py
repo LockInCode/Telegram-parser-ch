@@ -116,20 +116,39 @@ async def process_album(gid):
         log.error(f"Ошибка при отправке альбома {gid}: {e}")
 
 
+def _normalize_channel(channel: str):
+    """Приводит канал к виду, понятному Telethon: username, int id или инвайт-хэш."""
+    ch = (channel or "").strip()
+    low = ch.lower()
+    # Инвайт-ссылки: https://t.me/+HASH, t.me/joinchat/HASH
+    if "joinchat/" in low:
+        return low.split("joinchat/", 1)[1].split("?")[0]
+    if "t.me/+" in low:
+        return "https://" + low.split("://", 1)[-1] if low.startswith("http") else "https://t.me/+" + low.split("t.me/+", 1)[1].split("?")[0]
+    ch = ch.lstrip('@')
+    if ch.replace('-', '').isdigit():
+        return int(ch)
+    return ch
+
+
 async def check_and_subscribe(channel: str):
     try:
-        clear_channel = channel.lstrip('@')
-        if clear_channel.replace('-', '').isdigit():
-            entity_to_join = int(clear_channel)
-        else:
-            entity_to_join = clear_channel
+        target = _normalize_channel(channel)
 
         try:
-            entity = await client.get_entity(entity_to_join)
+            entity = await client.get_entity(target)
         except Exception:
-            entity = await client(JoinChannelRequest(entity_to_join))
-            log.info(f"Успешная подписка на канал: {channel}")
-            
+            # Для инвайт-ссылок нужен ImportChatInvite
+            if isinstance(target, str) and target.startswith("https://t.me/+"):
+                from telethon.tl.functions.messages import ImportChatInviteRequest
+                invite_hash = target.rsplit("+", 1)[1]
+                res = await client(ImportChatInviteRequest(invite_hash))
+                entity = res.chats[0] if getattr(res, "chats", None) else None
+                log.info(f"Успешная подписка по инвайт-ссылке: {channel}")
+            else:
+                entity = await client(JoinChannelRequest(target))
+                log.info(f"Успешная подписка на канал: {channel}")
+
         title = getattr(entity, 'title', '')
         if title:
             db.update_source_title(channel, title)

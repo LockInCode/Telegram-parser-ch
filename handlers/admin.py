@@ -7,18 +7,25 @@ from database.bd import db
 
 router = Router()
 
-@router.message(CommandStart())
-async def cmd_start(message: Message):
+def admin_help_text() -> str:
+    return (
+        "🛠 <b>Админская панель</b>\n\n"
+        "Список команд для администратора:\n"
+        "/showsettings - показать количество каналов в агрегаторе\n"
+        "/replymode - переключить статус пересылки on/off\n"
+        "/addsource (ссылка, юзернейм или id канала) (количество дней) - добавить канал\n"
+        "/removesource (ссылка, юзернейм или id канала) - удалить канал\n"
+        "/settarget (ссылка/юзернейм/id) - установить целевой канал\n"
+        "/ignore - открывает список игнор слов\n"
+        "/addignore (слово) (слово) ... - добавить стоп слова\n"
+        "/removeignore (слово) (слово) ... - удалить стоп слова"
+    )
+
+
+@router.message(Command("admin"))
+async def cmd_admin(message: Message):
     if str(message.from_user.id) == settings.admin_id:
-        await message.answer(
-            f"Список команд для администратора:\n\n"
-            f"/start - список команд\n"
-            f"/showsettings - показать количество каналов в агрегаторе \n"
-            f"/replymode - переключить статус пересылки on/off \n"
-            f"/addsource (ссылка, юзернейм или id канала) (количество дней) - добавить канал \n"
-            f"/removesource (ссылка, юзернейм или id канала) - удалить канал \n"
-            f"/ignore - открывает список игнор слов"
-        )
+        await message.answer(admin_help_text())
 
 @router.message(Command("showsettings"))
 async def show_settings(message: Message):
@@ -102,14 +109,63 @@ async def remove_source(message: Message):
 
 @router.message(Command("ignore"))
 async def ignore_words(message: Message):
-    if str(message.from_user.id) == settings.admin_id:
-        ignore_words = db.get_ignore_words()
-        if not ignore_words:
-            await message.answer("Список игнор слов пуст.")
-            return
+    if str(message.from_user.id) != settings.admin_id:
+        return
 
-        ignore_list = "\n".join(ignore_words)
-        await message.answer(f"<b>Список игнор слов:</b>\n\n{ignore_list}")
+    ignore_words = db.get_ignore_words()
+    if not ignore_words:
+        await message.answer("Список игнор слов пуст.")
+        return
+
+    ignore_list = "\n".join(f"{i}. <code>{w}</code>" for i, w in enumerate(ignore_words, 1))
+    await message.answer(f"<b>Список игнор слов:</b>\n\n{ignore_list}")
+
+@router.message(Command("addignore"))
+async def add_ignore_words(message: Message):
+    if str(message.from_user.id) != settings.admin_id:
+        return
+
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer("Пожалуйста, укажите слово или несколько слов через пробел.")
+        return
+
+    words = args[1].split()
+    added = []
+    for word in words:
+        if word in db.get_ignore_words():
+            continue
+        db.add_ignore_word(word)
+        added.append(word)
+
+    if added:
+        added_str = ", ".join(f"<code>{w}</code>" for w in added)
+        await message.answer(f"<b>Добавлены стоп слова:</b>\n{added_str}")
+    else:
+        await message.answer("Все указанные слова уже есть в списке.")
+
+@router.message(Command("removeignore"))
+async def remove_ignore_words(message: Message):
+    if str(message.from_user.id) != settings.admin_id:
+        return
+
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer("Пожалуйста, укажите слово или несколько слов через пробел.")
+        return
+
+    words = args[1].split()
+    removed = []
+    for word in words:
+        if word in db.get_ignore_words():
+            db.remove_ignore_word(word)
+            removed.append(word)
+
+    if removed:
+        removed_str = ", ".join(f"<code>{w}</code>" for w in removed)
+        await message.answer(f"<b>Удалены стоп слова:</b>\n{removed_str}")
+    else:
+        await message.answer("Указанных слов нет в списке.")
 
 @router.message(Command("settarget"))
 async def set_target_channel(message: Message):

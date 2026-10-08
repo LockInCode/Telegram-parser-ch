@@ -1,4 +1,6 @@
-aiogram
-telethon
-dotenv
+aiogram>=3.15
+telethon>=1.36
+python-dotenv
 loguru
+pydantic-settings
+aiohttp
